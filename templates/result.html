@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            color: #28a745;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>BMI Results</h1>
+    <div id="bmiOutput">
+        <p>Loading BMI results...</p>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Nutritional Information</h2>
+    <input type="text" id="foodItem" placeholder="Enter food item">
+    <button id="nutritionButton">Get Nutritional Info</button>
+    <div id="nutritionResult" class="result"></div>
+</div>
+
+<div class="container">
+    <h2>Calorie Information</h2>
+    <input type="text" id="calorieFoodItem" placeholder="Enter food item">
+    <button id="calorieButton">Get Calorie Info</button>
+    <div id="calorieResult" class="result"></div>
+</div>
+
+<a href="/">Go Back</a>
+
+<script>
+    // Display BMI data
+    const bmiData = JSON.parse(localStorage.getItem('bmiData'));
+    if (bmiData) {
+        document.getElementById('bmiOutput').innerHTML = `
+            <p><strong>BMI:</strong> ${bmiData.bmi}</p>
+            <p><strong>Category:</strong> ${bmiData.category}</p>
+            <p><strong>Suggestion:</strong> ${bmiData.suggestions.suggestion}</p>
+            <p><strong>Target Daily Calorie Intake:</strong> ${bmiData.suggestions.target_calories} kcal</p>
+            ${bmiData.suggestions.calories_to_burn_per_day ? `
+                <p><strong>Calories to Burn Per Day:</strong> ${bmiData.suggestions.calories_to_burn_per_day} kcal</p>
+                <p><strong>Workout Time Needed Per Day:</strong> ${bmiData.suggestions.workout_hours} hours</p>
+            ` : ''}
+        `;
+    } else {
+        document.getElementById('bmiOutput').innerHTML = '<p>Error: No BMI data available.</p>';
+    }
+
+    // Fetch nutritional information
+    document.getElementById('nutritionButton').addEventListener('click', () => {
+        const foodItem = document.getElementById('foodItem').value;
+        fetch('/nutrition_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodItem })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data["Food Item"]) {
+                document.getElementById('nutritionResult').innerHTML = `
+                    <p><strong>Food Item:</strong> ${data["Food Item"]}</p>
+                    <p><strong>Calories:</strong> ${data["Calories (kcal)"]} kcal</p>
+                    <p><strong>Protein:</strong> ${data["Protein (g)"]} g</p>
+                    <p><strong>Fat:</strong> ${data["Fat (g)"]} g</p>
+                    <p><strong>Carbohydrates:</strong> ${data["Carbohydrates (g)"]} g</p>
+                `;
+            } else {
+                document.getElementById('nutritionResult').innerHTML = `<p>${data}</p>`;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Fetch calorie information
+    document.getElementById('calorieButton').addEventListener('click', () => {
+        const foodItem = document.getElementById('calorieFoodItem').value;
+        fetch('/calorie_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodItem })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('calorieResult').innerHTML = `<p>${data.calorie_info}</p>`;
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
+
+</body>
+</html>

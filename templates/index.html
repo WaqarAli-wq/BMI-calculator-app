@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            width: 300px;
+            text-align: center;
+        }
+
+        input, select, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #5cb85c;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #4cae4c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>BMI Calculator</h1>
+    <form id="bmiForm">
+        <input type="number" id="weight" placeholder="Weight (kg)" required>
+        <input type="number" id="feet" placeholder="Height (feet)" required>
+        <input type="number" id="inches" placeholder="Height (inches)" required>
+        <input type="number" id="age" placeholder="Age (years)" required>
+        <select id="gender" required>
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+        <select id="activityLevel" required>
+            <option value="">Select Activity Level</option>
+            <option value="sedentary">Sedentary</option>
+            <option value="lightly active">Lightly Active</option>
+            <option value="moderately active">Moderately Active</option>
+            <option value="very active">Very Active</option>
+            <option value="extra active">Extra Active</option>
+        </select>
+        <input type="number" id="days" placeholder="Days to normalize/maintain BMI" required>
+        <button type="submit">Calculate BMI</button>
+    </form>
+</div>
+
+<div class="container">
+    <h2>Nutritional Information</h2>
+    <input type="text" id="foodItem" placeholder="Enter food item">
+    <button id="nutritionButton">Get Nutritional Info</button>
+    <div id="nutritionResult" class="result"></div>
+</div>
+
+<div class="container">
+    <h2>Calorie Information</h2>
+    <input type="text" id="calorieFoodItem" placeholder="Enter food item">
+    <button id="calorieButton">Get Calorie Info</button>
+    <div id="calorieResult" class="result"></div>
+</div>
+
+<script>
+    // Fetch nutritional information
+    document.getElementById('nutritionButton').addEventListener('click', () => {
+        const foodItem = document.getElementById('foodItem').value;
+        fetch('/nutrition_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodItem })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data["Food Item"]) {
+                document.getElementById('nutritionResult').innerHTML = `
+                    <p><strong>Food Item:</strong> ${data["Food Item"]}</p>
+                    <p><strong>Calories:</strong> ${data["Calories (kcal)"]} kcal</p>
+                    <p><strong>Protein:</strong> ${data["Protein (g)"]} g</p>
+                    <p><strong>Fat:</strong> ${data["Fat (g)"]} g</p>
+                    <p><strong>Carbohydrates:</strong> ${data["Carbohydrates (g)"]} g</p>
+                `;
+            } else {
+                document.getElementById('nutritionResult').innerHTML = `<p>${data}</p>`;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Fetch calorie information
+    document.getElementById('calorieButton').addEventListener('click', () => {
+        const foodItem = document.getElementById('calorieFoodItem').value;
+        fetch('/calorie_info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ foodItem })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('calorieResult').innerHTML = `<p>${data.calorie_info}</p>`;
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    // Handle form submission for BMI calculation
+    document.getElementById('bmiForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const weight = document.getElementById('weight').value;
+        const feet = document.getElementById('feet').value;
+        const inches = document.getElementById('inches').value;
+        const age = document.getElementById('age').value;
+        const gender = document.getElementById('gender').value;
+        const activityLevel = document.getElementById('activityLevel').value;
+        const days = document.getElementById('days').value;
+
+        fetch('/calculate_bmi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ weight, feet, inches, age, gender, activityLevel, days })
+        })
+        .then(response => response.json())
+        .then(data => {
+            localStorage.setItem('bmiData', JSON.stringify(data));  // Save BMI data
+            window.location.href = '/result';  // Redirect to result page
+        })
+        .catch(error => console.error('Error:', error));
+    });
+</script>
+
+</body>
+</html>
